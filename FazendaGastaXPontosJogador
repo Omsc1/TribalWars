@@ -1,0 +1,89 @@
+// ==UserScript==
+// @name         Script: Valor Meta de Tropas
+// @author       Omsc1 & ChatGpt & Kinda Big Deal
+// @include      https://pt*screen=ally&mode=members_troops*
+// @run-at       document-end
+// ==/UserScript==
+
+let xpath = '//*[@id="ally_content"]/div/div/table'; // Exemplo: a primeira tabela na página
+let tabela = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue; // Encontre a tabela usando o XPath
+
+if (tabela) {
+  // Obtenha todas as linhas da tabela (tanto o cabeçalho quanto o corpo)
+  let linhas = tabela.rows;
+
+  // Iterar sobre todas as linhas e adicionar uma nova célula na última posição
+  for (let i = 0; i < linhas.length; i++) {
+    // Cria uma nova célula na última posição da linha
+    let novaCelula = linhas[i].insertCell(-1);  // -1 insere na última posição
+
+    // Opcional: Adicionar conteúdo à nova célula
+    novaCelula.textContent = 'Nova Coluna'; // Substitua por qualquer conteúdo desejado
+  }
+
+  // Modificar o texto da primeira célula da nova coluna (primeira linha)
+  let primeiraCelula = tabela.rows[0].cells[tabela.rows[0].cells.length - 1];  // A última célula da primeira linha
+  primeiraCelula.textContent = 'F/P';  // Novo conteúdo para a primeira célula
+  primeiraCelula.style.backgroundColor = '#dbb770';
+
+  // Remover o conteúdo da célula e adicionar a imagem
+  primeiraCelula.innerHTML = '';  // Limpa o conteúdo da célula
+
+  // Criar o elemento de imagem
+  let imagem = document.createElement('img');
+  imagem.src = 'https://dspt.innogamescdn.com/asset/61bc21fc/graphic//buildings/main.png';  // URL da imagem (substitua com a URL da imagem desejada)
+  imagem.alt = 'Imagem';  // Texto alternativo para a imagem
+
+  // Adicionar a imagem à primeira célula
+  primeiraCelula.appendChild(imagem);
+
+  // Iterar sobre as linhas a partir da segunda linha (ignorando o cabeçalho)
+  for (let i = 1; i < linhas.length; i++) {
+    let soma = 0;  // Inicializar a variável de soma para cada linha
+    let NColunas = 11;  // O número de colunas excluindo a nova coluna
+
+    // Obter o valor da primeira célula da linha (convertendo para número)
+    let valorPrimeiraCelula = parseFloat(linhas[i].cells[1].textContent);  // Valor da célula de "Pontos"
+
+    let valorColuna6 = parseFloat(linhas[i].cells[6].textContent);
+
+    let valorColunaLeves = parseFloat(linhas[i].cells[7].textContent);
+    let valorColunaArqCav = parseFloat(linhas[i].cells[8].textContent);
+    let valorColunaPesados = parseFloat(linhas[i].cells[9].textContent);
+    let valorColunaAri = parseFloat(linhas[i].cells[10].textContent);
+    let valorColunaCatas = parseFloat(linhas[i].cells[11].textContent);
+
+    if (!isNaN(valorPrimeiraCelula) && valorPrimeiraCelula !== 0) {  // Verificar se é um número e diferente de zero
+      // Iterar sobre as células da linha (a partir da coluna 2, por exemplo, para ignorar a primeira coluna)
+      for (let j = 2; j < NColunas; j++) {  // Começar a iteração a partir da coluna 2 (índice 1)
+        let valor = parseFloat(linhas[i].cells[j].textContent);
+        if (!isNaN(valor)) {
+          soma += valor;  // Somar os valores numéricos
+        }
+      }
+
+      soma -= valorColuna6;
+      soma += valorColunaLeves*3
+      soma += valorColunaArqCav*4
+      soma += valorColunaPesados*5
+      soma += valorColunaAri*4
+      soma += valorColunaCatas*7
+
+      let valorPrimeiraCelula = parseFloat(linhas[i].cells[1].textContent.replace(/\./g, '').replace(',', '.'));
+      // Dividir a soma pela primeira célula da linha (valorPrimeiraCelula)
+      let resultado = soma / valorPrimeiraCelula;
+
+      // A nova célula recebe o resultado da divisão
+      let novaCelula = linhas[i].cells[linhas[i].cells.length - 1];  // A última célula da linha
+      novaCelula.textContent = resultado.toFixed(2); // Mostrar o resultado com 2 casas decimais
+    } else {
+      // Se o valor da primeira célula não for um número ou for zero, mostrar um erro
+      let novaCelula = linhas[i].cells[linhas[i].cells.length - 1];  // A última célula da linha
+      novaCelula.textContent = 'Erro'; // Exibir erro, caso o valor da primeira célula não seja válido
+    }
+  }
+
+  console.log('Coluna adicionada com sucesso e soma dividida pelo valor da primeira célula!');
+} else {
+  console.log('Tabela não encontrada.');
+}
